@@ -1,0 +1,42 @@
+services:
+  postgres_db:
+    image: postgres:latest
+    container_name: slave_psql
+    restart: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${REPLICA_USER}
+      POSTGRES_PASSWORD: ${REPLICA_PASSWORD}
+    ports:
+      - "${REPLICA_PORT}:5432"
+    volumes:
+      - slave_data:/var/lib/postgresql/data
+    command: >
+      bash -c '
+        until 
+        pg_basebackup -h "$MASTER_HOST" -p "$MASTER_PORT" -U replicator -D /var/lib/postgresql/data -P -Xs -R -S replication_slot 
+        do
+        echo "connecting to primary instance"
+        sleep 1
+        done
+        echo "initial replication done all base data is pulled successfully"
+        chown -R postgres:postgres /var/lib/postgresql/data
+        chmod 0700 /var/lib/postgresql/data
+        runuser -u postgres -- postgres \
+        -c "wal_level=replica" \
+        -c "hot_standby=on" \
+        -c "max_wal_senders=15" \
+        -c "max_replication_slots=10" \
+        -c "hot_standby_feedback=on" \
+        -c "wal_log_hints=on" \
+        '
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  slave_data:
+    driver: local
