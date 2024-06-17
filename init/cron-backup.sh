@@ -2,7 +2,7 @@ set -e
 
 # Set up cron job to run incremental backup every hour
 until
-    sudo echo "0 * * * * root pgbackrest --stanza=aibunny --log-level-console=info --type=incr  >> /var/log/cron.log 2>&1" > /etc/cron.d/incr-backup-cron
+    sudo echo "0 * * * * root pgbackrest --stanza=aibunny --log-level-console=info --type=incr backup >> /var/log/cron.log 2>&1" > /etc/cron.d/incr-backup-cron
     sudo chmod 0644 /etc/cron.d/incr-backup-cron
 do 
     echo "Setting up cron for incremental backup"

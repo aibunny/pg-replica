@@ -66,7 +66,6 @@ services:
       - cache:/data
       - ./files/pgcat.toml:/etc/pgcat/pgcat.toml
 
-
 volumes:
   pgdata:
     driver: local

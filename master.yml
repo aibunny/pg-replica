@@ -1,6 +1,8 @@
 services:
   master_psql:
-    image: postgres:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: master_psql
     restart: always
     env_file:
@@ -28,37 +30,12 @@ services:
       - ./init/:/docker-entrypoint-initdb.d
       - ./files/pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf #update file add s3 bucket settings
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready" ]
+      test: ["CMD-SHELL", "pg_isready"]
       interval: 10s
       timeout: 5s
-
-
-  pg_pooler:
-    container_name: pg_pooler
-    image: ghcr.io/postgresml/pgcat:latest
-    restart: always
-    command: >
-      pgcat /etc/pgcat/pgcat.toml
-    ports:
-      - "6432:6432"
-      - "9930:9930"
-    depends_on:
-      master_psql:
-        condition: service_healthy
-    volumes:
-      - cache:/data
-      - ./files/pgcat.toml:/etc/pgcat/pgcat.toml
-
 
 volumes:
   pgdata:
     driver: local
-  cache:
-    driver: local
   pgbackrest_backup:
     driver: local
-
-
-
-
-
